@@ -26,7 +26,6 @@ package-lock.json
 # ---------------------------
 prisma/dev.db
 prisma/migrations/
-*.prisma
 
 # Build outputs
 dist/
