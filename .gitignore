@@ -7,12 +7,26 @@ package-lock.json
 # VSCode
 .vscode/
 
+# Turborepo daemon logs
+*.log
+
+# Turborepo
+.turbo/
+
+
 # Env files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# ---------------------------
+# Prisma
+# ---------------------------
+prisma/dev.db
+prisma/migrations/
+*.prisma
 
 # Build outputs
 dist/
