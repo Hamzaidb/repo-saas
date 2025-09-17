@@ -1,15 +1,15 @@
 import Fastify from "fastify";
-import cors from "@fastify/cors";
+import prismaPlugin from "./plugins/prisma.js";
 
-const app = Fastify();
+const server = Fastify({ logger: true });
 
-app.register(cors);
+server.register(prismaPlugin);
 
-app.get("/", async () => {
-  return { message: "Hello from backend!" };
-});
 
-app.listen({ port: 4000 }, (err, address) => {
-  if (err) throw err;
-  console.log(`Server listening at ${address}`);
+server.listen({ port: 3001 }, (err, address) => {
+  if (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+  server.log.info(`🚀 Server ready at ${address}`);
 });
