@@ -1,0 +1,19 @@
+{
+  "name": "repo-saas",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "turbo": "latest"
+  },
+  "packageManager": "npm@11.0.0"
+}
