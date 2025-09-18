@@ -13,7 +13,7 @@ interface Product {
   id: string;
   name: string;
   description?: string;
-  price: string; // Decimal vient comme string depuis l'API
+  price: number; // Changé de string à number
   stock: number;
   category_id?: string;
   created_at?: string;
@@ -232,7 +232,7 @@ const ProductsPage = () => {
                         <span className="font-mono">ID: {product.id}</span>
                         {product.price && (
                           <span className="font-semibold text-green-600">
-                            💰 {parseFloat(product.price)}€
+                            💰 {product.price.toFixed(2)}€
                           </span>
                         )}
                         {product.category_id && (
