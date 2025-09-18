@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Package, ShoppingCart, Users, Settings, LogOut } from 'lucide-react';
 
+// Changer les chemins pour qu'ils soient relatifs
 const navigation = [
-  { name: 'Tableau de bord', href: '/dashboard', icon: Home },
-  { name: 'Mes Commandes', href: '/dashboard/orders', icon: ShoppingCart },
-  { name: 'Ma Collection', href: '/dashboard/collection', icon: Package },
-  { name: 'Mon Profil', href: '/dashboard/profile', icon: Users },
-  { name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
+  { name: 'Tableau de bord', href: '.', icon: Home },  // Chemin relatif
+  { name: 'Mes Commandes', href: 'orders', icon: ShoppingCart },
+  { name: 'Ma Collection', href: 'collection', icon: Package },
+  { name: 'Mon Profil', href: 'profile', icon: Users },
+  { name: 'Paramètres', href: 'settings', icon: Settings },
 ];
 
 export function Sidebar() {
