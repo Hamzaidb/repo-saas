@@ -5,28 +5,13 @@ const productParamsSchema = z.object({
   id: z.string().min(1, 'Product ID is required'),
 });
 
-function transformBigInt(obj: any): any {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-  
-  if (typeof obj === 'bigint') {
-    return obj.toString();
-  }
-  
-  if (Array.isArray(obj)) {
-    return obj.map(transformBigInt);
-  }
-  
-  if (typeof obj === 'object') {
-    const transformed: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      transformed[key] = transformBigInt(value);
-    }
-    return transformed;
-  }
-  
-  return obj;
+// Fonction pour transformer les données Prisma en format JSON propre
+function transformProductData(product: any) {
+  return {
+    ...product,
+    price: product.price ? parseFloat(product.price.toString()) : 0,
+    created_at: product.created_at ? product.created_at.toISOString() : null,
+  };
 }
 
 export default async function productRoutes(fastify: FastifyInstance) {
@@ -43,11 +28,12 @@ export default async function productRoutes(fastify: FastifyInstance) {
         },
       });
       
-      const transformedProducts = transformBigInt(products);
+      const transformedProducts = products.map(transformProductData);
       
       return { data: transformedProducts };
-    } catch (error) {
-      fastify.log.error('Error in getAllProducts:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      fastify.log.error(`Error in getAllProducts: ${errorMessage}`);
       reply.status(500).send({ error: 'Failed to fetch products' });
     }
   });
@@ -57,10 +43,9 @@ export default async function productRoutes(fastify: FastifyInstance) {
     try {
       const { id } = productParamsSchema.parse(request.params);
       
-      const productId = BigInt(id);
-      
+      // Plus besoin de conversion BigInt, l'ID est directement utilisable
       const product = await fastify.prisma.products.findUnique({
-        where: { id: productId },
+        where: { id },
         include: {
           categories: true,
         },
@@ -71,10 +56,10 @@ export default async function productRoutes(fastify: FastifyInstance) {
         return;
       }
       
-      const transformedProduct = transformBigInt(product);
+      const transformedProduct = transformProductData(product);
       
       return { data: transformedProduct };
-    } catch (error) {
+    } catch (error: unknown) {
       if (error instanceof ZodError) {
         reply.status(400).send({ 
           error: 'Invalid product ID', 
@@ -83,12 +68,7 @@ export default async function productRoutes(fastify: FastifyInstance) {
         return;
       }
       
-      if (error instanceof RangeError || error.message?.includes('BigInt')) {
-        reply.status(400).send({ error: 'Invalid product ID format' });
-        return;
-      }
-      
-      fastify.log.error('Error in getProductById:', error);
+      fastify.log.error({ error, msg: 'Error in getProductById' });
       reply.status(500).send({ error: 'Failed to fetch product' });
     }
   });
@@ -97,10 +77,10 @@ export default async function productRoutes(fastify: FastifyInstance) {
   fastify.get('/category/:categoryId', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const { categoryId } = request.params as { categoryId: string };
-      const catId = BigInt(categoryId);
       
+      // categoryId est maintenant un CUID string, pas besoin de conversion
       const products = await fastify.prisma.products.findMany({
-        where: { category_id: catId },
+        where: { category_id: categoryId },
         include: {
           categories: true,
         },
@@ -109,16 +89,12 @@ export default async function productRoutes(fastify: FastifyInstance) {
         },
       });
       
-      const transformedProducts = transformBigInt(products);
+      const transformedProducts = products.map(transformProductData);
       
       return { data: transformedProducts };
-    } catch (error) {
-      if (error instanceof RangeError || error.message?.includes('BigInt')) {
-        reply.status(400).send({ error: 'Invalid category ID format' });
-        return;
-      }
-      
-      fastify.log.error('Error in getProductsByCategory:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      fastify.log.error(`Error in getProductsByCategory: ${errorMessage}`);
       reply.status(500).send({ error: 'Failed to fetch products by category' });
     }
   });
@@ -153,11 +129,12 @@ export default async function productRoutes(fastify: FastifyInstance) {
         },
       });
       
-      const transformedProducts = transformBigInt(products);
+      const transformedProducts = products.map(transformProductData);
       
       return { data: transformedProducts };
-    } catch (error) {
-      fastify.log.error('Error in searchProducts:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      fastify.log.error(`Error in searchProducts: ${errorMessage}`);
       reply.status(500).send({ error: 'Failed to search products' });
     }
   });
