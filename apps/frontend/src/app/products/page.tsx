@@ -15,9 +15,11 @@ interface Product {
   id: string;
   name: string;
   description?: string;
-  price: string; // Decimal vient comme string depuis l'API
+  price: number;
   stock: number;
   category_id?: string;
+  image_url?: string;
+  images?: string[];
   created_at?: string;
   categories?: Category;
 }
@@ -26,122 +28,133 @@ interface ApiResponse {
   data: Product[];
 }
 
-interface SingleProductResponse {
-  data: Product;
-}
-
-// Type pour un produit
-type CollectionProduct = {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  rating: number;
-  image: string;
-  isNew?: boolean;
-  isBestSeller?: boolean;
-};
-
-// Fonction pour récupérer les produits (à remplacer par un appel API réel)
-async function getProducts(): Promise<CollectionProduct[]> {
-  // Simulation de données
-  return [
-    {
-      id: '1',
-      name: 'Figurine Dragon Ball Z - Son Goku',
-      price: 49.99,
-      category: 'Anime',
-      rating: 4.8,
-      image: '/placeholder-figurine-1.jpg',
-      isNew: true,
-      isBestSeller: true,
-    },
-    {
-      id: '2',
-      name: 'Figurine Marvel - Iron Man Mark L',
-      price: 89.99,
-      category: 'Marvel',
-      rating: 4.9,
-      image: '/placeholder-figurine-2.jpg',
-      isBestSeller: true,
-    },
-    {
-      id: '3',
-      name: 'Figurine Star Wars - Dark Vador',
-      price: 69.99,
-      category: 'Star Wars',
-      rating: 4.7,
-      image: '/placeholder-figurine-3.jpg',
-      isNew: true,
-    },
-    // Ajoutez plus de produits ici
-  ];
+interface CategoryStatsResponse {
+  data: {
+    id: string;
+    name: string;
+    count: number;
+  }[];
 }
 
 const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [productId, setProductId] = useState('');
-  const [collectionProducts, setCollectionProducts] = useState<CollectionProduct[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('newest');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12);
 
   const API_BASE = 'http://localhost:3001';
 
-  // Récupérer tous les produits
-  const fetchAllProducts = async () => {
-    setLoading(true);
-    setError('');
+  // Helper pour formater le prix
+  const formatPrice = (price: any): string => {
+    if (typeof price === 'number') return price.toFixed(2);
+    if (typeof price === 'string') {
+      const parsed = parseFloat(price);
+      return isNaN(parsed) ? '0.00' : parsed.toFixed(2);
+    }
+    return '0.00';
+  };
+
+  // Récupérer tous les produits et catégories
+  const fetchData = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products`);
-      const data: ApiResponse = await response.json();
+      setLoading(true);
+      setError('');
       
-      if (response.ok) {
-        setProducts(data.data || []);
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        fetch(`${API_BASE}/products`),
+        fetch(`${API_BASE}/categories/stats`)
+      ]);
+      
+      if (productsResponse.ok) {
+        const productsData: ApiResponse = await productsResponse.json();
+        setProducts(productsData.data || []);
       } else {
-        setError((data as any).error || 'Erreur lors du chargement');
+        throw new Error('Failed to fetch products');
       }
+
+      if (categoriesResponse.ok) {
+        const categoriesData: CategoryStatsResponse = await categoriesResponse.json();
+        setCategories(categoriesData.data || []);
+      }
+      
     } catch (err) {
-      setError('Erreur de connexion au serveur');
-      console.error('Fetch error:', err);
+      console.error('Error fetching data:', err);
+      setError('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
     }
   };
 
-  // Récupérer un produit par ID
-  const fetchProductById = async () => {
-    if (!productId.trim()) {
-      setError('Veuillez entrer un ID de produit');
-      return;
-    }
+  // Filtrer les produits
+  const filteredProducts = products.filter(product => {
+    if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'in-stock') return product.stock > 0;
+    if (selectedCategory === 'out-of-stock') return product.stock === 0;
+    return product.category_id === selectedCategory;
+  });
 
-    setLoading(true);
-    setError('');
-    setSelectedProduct(null);
-    
-    try {
-      const response = await fetch(`${API_BASE}/products/${productId}`);
-      const data: SingleProductResponse = await response.json();
-      
-      if (response.ok) {
-        setSelectedProduct(data.data);
-      } else {
-        setError((data as any).error || 'Produit non trouvé');
-      }
-    } catch (err) {
-      setError('Erreur de connexion au serveur');
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
+  // Trier les produits
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      case 'name':
+        return a.name.localeCompare(b.name);
+      case 'stock':
+        return b.stock - a.stock;
+      case 'newest':
+      default:
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     }
-  };
+  });
 
-  // Charger les produits au démarrage
+  // Calculs pour la pagination
+  const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = sortedProducts.slice(startIndex, endIndex);
+
+  // Reset à la page 1 quand on change de filtre
   useEffect(() => {
-    fetchAllProducts();
-    getProducts().then((data) => setCollectionProducts(data));
+    setCurrentPage(1);
+  }, [selectedCategory, sortBy]);
+
+  useEffect(() => {
+    fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin text-4xl mb-4">⏳</div>
+          <p className="text-gray-500">Chargement des produits...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchData} 
+            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white">
@@ -149,13 +162,9 @@ const ProductsPage = () => {
         {/* En-tête avec image de bannière */}
         <div className="relative bg-gray-800">
           <div className="h-56 bg-indigo-600 sm:h-72 md:absolute md:left-0 md:h-full md:w-1/2">
-            <Image
-              className="w-full h-full object-cover"
-              src="/banner-collection.jpg"
-              alt="Collection de figurines"
-              width={1000}
-              height={600}
-            />
+            <div className="w-full h-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center">
+              <span className="text-6xl">🏪</span>
+            </div>
           </div>
           <div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
             <div className="md:ml-auto md:w-1/2 md:pl-10">
@@ -166,7 +175,7 @@ const ProductsPage = () => {
                 Des figurines exceptionnelles
               </p>
               <p className="mt-3 text-lg text-gray-300">
-                Découvrez notre sélection de figurines de qualité supérieure pour les collectionneurs exigeants.
+                Découvrez notre sélection de {products.length} figurines de qualité supérieure pour les collectionneurs exigeants.
               </p>
             </div>
           </div>
@@ -175,36 +184,24 @@ const ProductsPage = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-baseline justify-between border-b border-gray-200 pt-12 pb-6">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Tous les produits
+              Tous les produits ({sortedProducts.length})
             </h1>
 
-            <div className="flex items-center">
-              <div className="relative inline-block text-left">
-                <div>
-                  <button
-                    type="button"
-                    className="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900"
-                    id="menu-button"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                  >
-                    Trier
-                    <svg
-                      className="-mr-1 ml-1 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">
+                Page {currentPage} sur {totalPages}
+              </span>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm text-black"
+              >
+                <option value="newest">Plus récents</option>
+                <option value="price-asc">Prix croissant</option>
+                <option value="price-desc">Prix décroissant</option>
+                <option value="name">Nom A-Z</option>
+                <option value="stock">Stock disponible</option>
+              </select>
             </div>
           </div>
 
@@ -215,198 +212,261 @@ const ProductsPage = () => {
 
             <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
               {/* Filtres */}
-              <form className="hidden lg:block">
-                <h3 className="sr-only">Catégories</h3>
+              <div className="hidden lg:block">
+                <h3 className="sr-only">Filtres</h3>
+                
+                {/* Filtres rapides */}
                 <ul role="list" className="space-y-4 border-b border-gray-200 pb-6 text-sm font-medium text-gray-900">
                   <li>
-                    <a href="#" className="text-indigo-600">Tout</a>
+                    <button 
+                      onClick={() => setSelectedCategory('all')}
+                      className={selectedCategory === 'all' ? 'text-indigo-600' : 'hover:text-indigo-600'}
+                    >
+                      Tous ({products.length})
+                    </button>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-indigo-600">Nouveautés</a>
+                    <button 
+                      onClick={() => setSelectedCategory('in-stock')}
+                      className={selectedCategory === 'in-stock' ? 'text-indigo-600' : 'hover:text-indigo-600'}
+                    >
+                      En stock ({products.filter(p => p.stock > 0).length})
+                    </button>
                   </li>
                   <li>
-                    <a href="#" className="hover:text-indigo-600">Meilleures ventes</a>
+                    <button 
+                      onClick={() => setSelectedCategory('out-of-stock')}
+                      className={selectedCategory === 'out-of-stock' ? 'text-indigo-600' : 'hover:text-indigo-600'}
+                    >
+                      Rupture de stock ({products.filter(p => p.stock === 0).length})
+                    </button>
                   </li>
                 </ul>
 
+                {/* Filtres par catégorie */}
                 <div className="border-b border-gray-200 py-6">
-                  <h3 className="-my-3 flow-root">
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500"
-                      aria-controls="filter-section-0"
-                      aria-expanded="false"
-                    >
-                      <span className="font-medium text-gray-900">Catégorie</span>
-                      <span className="ml-6 flex items-center">
-                        <svg
-                          className="h-5 w-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                        </svg>
-                      </span>
-                    </button>
-                  </h3>
-                  <div className="pt-6" id="filter-section-0">
-                    <div className="space-y-4">
-                      {['Anime', 'Marvel', 'Star Wars', 'DC Comics', 'Jeux Vidéo'].map((category) => (
-                        <div key={category} className="flex items-center">
+                  <h3 className="font-medium text-gray-900 mb-4">Catégories</h3>
+                  <div className="space-y-4">
+                    {categories.map((category) => {
+                      const categoryProductCount = products.filter(p => p.category_id === category.id).length;
+                      return (
+                        <div key={category.id} className="flex items-center">
                           <input
-                            id={`filter-category-${category}`}
-                            name="category[]"
-                            value={category}
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            id={`filter-category-${category.id}`}
+                            name="category"
+                            type="radio"
+                            checked={selectedCategory === category.id}
+                            onChange={() => setSelectedCategory(category.id)}
+                            className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
                           />
                           <label
-                            htmlFor={`filter-category-${category}`}
-                            className="ml-3 text-sm text-gray-600"
+                            htmlFor={`filter-category-${category.id}`}
+                            className="ml-3 text-sm text-gray-600 cursor-pointer"
                           >
-                            {category}
+                            {category.name} ({categoryProductCount})
                           </label>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
-              </form>
+              </div>
 
               {/* Grille des produits */}
               <div className="lg:col-span-3">
-                <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
-                  {collectionProducts.map((product) => (
-                    <div key={product.id} className="group relative">
-                      <div className="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          className="h-full w-full object-cover object-center lg:h-full lg:w-full"
-                          width={300}
-                          height={400}
-                        />
-                        {product.isNew && (
-                          <div className="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            Nouveau
+                {sortedProducts.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📦</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun produit trouvé</h3>
+                    <p className="text-gray-500">Essayez de modifier vos filtres</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
+                      {currentProducts.map((product) => (
+                        <div key={product.id} className="group relative">
+                          <div className="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
+                            {product.image_url ? (
+                              <Image
+                                src={product.image_url}
+                                alt={product.name}
+                                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                                width={300}
+                                height={400}
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-4xl bg-gray-100">
+                                🖼️
+                              </div>
+                            )}
+                            
+                            {/* Badges */}
+                            <div className="absolute top-2 right-2 space-y-1">
+                              {product.stock === 0 && (
+                                <div className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                  Rupture
+                                </div>
+                              )}
+                              {product.stock > 0 && product.stock <= 5 && (
+                                <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                  Stock faible
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Badge catégorie */}
+                            {product.categories && (
+                              <div className="absolute top-2 left-2">
+                                <div className="bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                  {product.categories.name}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {product.isBestSeller && (
-                          <div className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-                            Meilleure vente
+                          
+                          <div className="mt-4 flex justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-sm text-gray-700">
+                                <Link href={`/products/${product.id}`}>
+                                  <span aria-hidden="true" className="absolute inset-0" />
+                                  {product.name}
+                                </Link>
+                              </h3>
+                              <p className="mt-1 text-sm text-gray-500">
+                                {product.categories?.name || 'Non catégorisé'}
+                              </p>
+                              {product.description && (
+                                <p className="mt-1 text-xs text-gray-400 line-clamp-2">
+                                  {product.description}
+                                </p>
+                              )}
+                              
+                              {/* Stock */}
+                              <div className="mt-2">
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  product.stock > 5 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : product.stock > 0
+                                    ? 'bg-orange-100 text-orange-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="text-right ml-4">
+                              <p className="text-sm font-medium text-gray-900">
+                                {formatPrice(product.price)} €
+                              </p>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="mt-4 flex justify-between">
-                        <div>
-                          <h3 className="text-sm text-gray-700">
-                            <Link href={`/products/${product.id}`}>
-                              <span aria-hidden="true" className="absolute inset-0" />
-                              {product.name}
-                            </Link>
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">{product.category}</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-900">{product.price} €</p>
-                      </div>
-                      <div className="mt-2 flex items-center">
-                        {[0, 1, 2, 3, 4].map((rating) => (
-                          <svg
-                            key={rating}
-                            className={`h-4 w-4 ${product.rating > rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                        <span className="ml-2 text-xs text-gray-500">{product.rating.toFixed(1)}</span>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Pagination */}
-                <nav
-                  className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 mt-8"
-                  aria-label="Pagination"
-                >
-                  <div className="-mt-px flex w-0 flex-1">
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    >
-                      <svg
-                        className="mr-3 h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <nav
+                        className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0 mt-8"
+                        aria-label="Pagination"
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Précédent
-                    </a>
-                  </div>
-                  <div className="hidden md:-mt-px md:flex">
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-indigo-500 px-4 pt-4 text-sm font-medium text-indigo-600"
-                      aria-current="page"
-                    >
-                      1
-                    </a>
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    >
-                      2
-                    </a>
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    >
-                      3
-                    </a>
-                    <span className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500">
-                      ...
-                    </span>
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    >
-                      8
-                    </a>
-                  </div>
-                  <div className="-mt-px flex w-0 flex-1 justify-end">
-                    <a
-                      href="#"
-                      className="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                    >
-                      Suivant
-                      <svg
-                        className="ml-3 h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M2 10a.75.75 0 01.75-.75h12.59l-2.1 1.95a.75.75 0 111.02 1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </a>
-                  </div>
-                </nav>
+                        <div className="-mt-px flex w-0 flex-1">
+                          <button
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className={`inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium ${
+                              currentPage === 1
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                            }`}
+                          >
+                            <svg
+                              className="mr-3 h-5 w-5 text-gray-400"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            Précédent
+                          </button>
+                        </div>
+                        
+                        <div className="hidden md:-mt-px md:flex">
+                          {[...Array(totalPages)].map((_, index) => {
+                            const pageNumber = index + 1;
+                            const isCurrentPage = pageNumber === currentPage;
+                            const shouldShow = 
+                              pageNumber === 1 ||
+                              pageNumber === totalPages ||
+                              (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1);
+                            
+                            if (!shouldShow && pageNumber !== currentPage - 2 && pageNumber !== currentPage + 2) {
+                              return null;
+                            }
+                            
+                            if ((pageNumber === currentPage - 2 && currentPage > 3) || 
+                                (pageNumber === currentPage + 2 && currentPage < totalPages - 2)) {
+                              return (
+                                <span key={pageNumber} className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500">
+                                  ...
+                                </span>
+                              );
+                            }
+                            
+                            return (
+                              <button
+                                key={pageNumber}
+                                onClick={() => setCurrentPage(pageNumber)}
+                                className={`inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium ${
+                                  isCurrentPage
+                                    ? 'border-indigo-500 text-indigo-600'
+                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                                }`}
+                                aria-current={isCurrentPage ? 'page' : undefined}
+                              >
+                                {pageNumber}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        <div className="-mt-px flex w-0 flex-1 justify-end">
+                          <button
+                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                            className={`inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium ${
+                              currentPage === totalPages
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                            }`}
+                          >
+                            Suivant
+                            <svg
+                              className="ml-3 h-5 w-5 text-gray-400"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M2 10a.75.75 0 01.75-.75h12.59l-2.1 1.95a.75.75 0 111.02 1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </nav>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </section>

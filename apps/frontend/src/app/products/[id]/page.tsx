@@ -1,56 +1,65 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 
-// Type pour un produit
+// Type pour un produit (adapté à votre API)
 type Product = {
   id: string;
   name: string;
   price: number;
   description: string;
-  category: string;
-  rating: number;
+  category_id: number;
+  categories?: {
+    id: number;
+    name: string;
+  };
+  rating?: number;
   stock: number;
-  images: string[];
-  details: string[];
+  images?: string[];
+  details?: string[];
+  created_at: string;
+  updated_at: string;
 };
 
-// Fonction pour récupérer un produit par son ID (à remplacer par un appel API réel)
+// Fonction pour récupérer un produit par son ID
 async function getProduct(id: string): Promise<Product | null> {
-  // Simulation de données
-  const products: Product[] = [
-    {
-      id: '1',
-      name: 'Figurine Dragon Ball Z - Son Goku',
-      price: 49.99,
-      description: 'Figurine officielle Dragon Ball Z de Son Goku en Super Saiyan, édition limitée avec base de présentation.',
-      category: 'Anime',
-      rating: 4.8,
-      stock: 15,
-      images: [
-        '/placeholder-figurine-1.jpg',
-        '/placeholder-figurine-2.jpg',
-        '/placeholder-figurine-3.jpg'
-      ],
-      details: [
-        'Hauteur: 25cm',
-        'Matière: PVC de haute qualité',
-        'Peinture à la main',
-        'Base incluse',
-        'Emballage: Boîte fenêtrée'
-      ]
-    },
-    // Ajoutez d'autres produits selon vos besoins
-  ];
+  try {
+    const apiBaseUrl = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+    const response = await fetch(`${apiBaseUrl}/products/${id}`, {
+      cache: 'no-store', // ou 'force-cache' selon vos besoins
+    });
 
-  return products.find(product => product.id === id) || null;
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data || null;
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return null;
+  }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await getProduct(params.id);
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = await getProduct(id);
 
   if (!product) {
     notFound();
   }
+
+  // Images par défaut si aucune image n'est disponible
+  const productImages = product.images && product.images.length > 0 
+    ? product.images 
+    : ['/placeholder-product.jpg'];
+
+  // Détails par défaut si aucun détail n'est disponible
+  const productDetails = product.details && product.details.length > 0
+    ? product.details
+    : ['Produit de qualité', 'Livraison rapide', 'Garantie fabricant'];
 
   return (
     <div className="bg-white">
@@ -60,7 +69,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
           <div className="space-y-4">
             <div className="aspect-w-4 aspect-h-3 rounded-lg overflow-hidden">
               <Image
-                src={product.images[0]}
+                src={productImages[0]}
                 alt={product.name}
                 width={800}
                 height={800}
@@ -69,7 +78,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {product.images.slice(0, 4).map((image, index) => (
+              {productImages.slice(0, 4).map((image, index) => (
                 <div key={index} className="aspect-square rounded-md overflow-hidden border border-gray-200">
                   <Image
                     src={image}
@@ -89,6 +98,15 @@ export default async function ProductPage({ params }: { params: { id: string } }
               {product.name}
             </h1>
 
+            {/* Catégorie */}
+            {product.categories && (
+              <div className="mt-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  {product.categories.name}
+                </span>
+              </div>
+            )}
+
             <div className="mt-3">
               <h2 className="sr-only">Informations produit</h2>
               <p className="text-3xl text-gray-900">
@@ -101,6 +119,28 @@ export default async function ProductPage({ params }: { params: { id: string } }
               </p>
             </div>
 
+            {/* Note si disponible */}
+            {product.rating && (
+              <div className="mt-3 flex items-center">
+                <div className="flex items-center">
+                  {[0, 1, 2, 3, 4].map((rating) => (
+                    <svg
+                      key={rating}
+                      className={`${
+                        product.rating > rating ? 'text-yellow-400' : 'text-gray-200'
+                      } h-5 w-5 flex-shrink-0`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="ml-2 text-sm text-gray-900">{product.rating.toFixed(1)}</p>
+              </div>
+            )}
+
             <div className="mt-6">
               <h3 className="sr-only">Description</h3>
               <div className="text-base text-gray-700 space-y-3">
@@ -112,7 +152,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
               <h3 className="text-sm font-medium text-gray-900">Détails</h3>
               <div className="mt-4">
                 <ul role="list" className="pl-4 list-disc text-sm space-y-2">
-                  {product.details.map((detail, index) => (
+                  {productDetails.map((detail, index) => (
                     <li key={index} className="text-gray-600">
                       <span className="text-gray-700">{detail}</span>
                     </li>
@@ -157,7 +197,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                   <p className="sr-only">5 étoiles</p>
                   <div className="mt-3 space-y-6 text-sm text-gray-600">
                     <p>
-                      La qualité de cette figurine est exceptionnelle. Les détails sont incroyables et la peinture est parfaite.
+                      La qualité de ce produit est exceptionnelle. Très satisfait de mon achat !
                     </p>
                   </div>
                 </div>
