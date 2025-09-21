@@ -12,6 +12,15 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+                 0 0 20px rgba(59, 130, 246, 0.7), /* bleu-500 */
+                 0 0 40px rgba(59, 131, 246, 0.195);
+  }
+}
+
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

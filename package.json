@@ -15,5 +15,10 @@
     "tsx": "^4.20.5",
     "turbo": "latest"
   },
-  "packageManager": "npm@11.0.0"
+  "packageManager": "npm@11.0.0",
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "stripe": "^18.5.0"
+  }
 }
