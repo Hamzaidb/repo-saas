@@ -260,7 +260,7 @@ export default function Home() {
                 {categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/category/${category.id}`}
+                    href={`/products`}
                     className="group bg-white p-6 
                     rounded-lg shadow-sm border border-gray-100
                      hover:border-indigo-200 hover:shadow-md 
