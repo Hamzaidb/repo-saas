@@ -199,20 +199,25 @@ export default function Home() {
       >
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          <h1 className="text-glow text-3xl font-light tracking-tight text-white sm:text-5xl lg:text-6xl">
             Découvrez notre collection exclusive de figurines
           </h1>
-          <p className="mt-6 text-xl text-gray-100 max-w-3xl mx-auto">
+          <p className="text-shadow-black mt-6 text-xl text-gray-100 max-w-3xl mx-auto">
             La plus belle sélection de figurines de collection, soigneusement sélectionnées pour les passionnés.
           </p>
           <div className="mt-10">
-            <Link
-              href="/products"
-              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-white hover:bg-indigo-50 md:py-4 md:text-lg md:px-10"
-            >
-              Découvrir la collection
-            </Link>
-          </div>
+          <Link
+            href="/products"
+            className="inline-flex items-center justify-center px-8 py-3 
+                      rounded-md text-base font-medium md:py-4 md:text-lg md:px-10
+                      text-white 
+                      bg-white/20 backdrop-blur-md border border-white/30
+                      shadow-lg hover:bg-white/30 transition"
+          >
+            Découvrir la collection
+          </Link>
+        </div>
+
         </div>
       </div>
 

@@ -16,6 +16,7 @@ type Product = {
   rating?: number;
   stock: number;
   images?: string[];
+  image_url?: string; 
   details?: string[];
   created_at: string;
   updated_at: string;
@@ -26,7 +27,7 @@ async function getProduct(id: string): Promise<Product | null> {
   try {
     const apiBaseUrl = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
     const response = await fetch(`${apiBaseUrl}/products/${id}`, {
-      cache: 'no-store', // ou 'force-cache' selon vos besoins
+      cache: 'no-store', 
     });
 
     if (!response.ok) {
@@ -44,25 +45,26 @@ async function getProduct(id: string): Promise<Product | null> {
   }
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const product = await getProduct(id);
 
   if (!product) {
     notFound();
   }
 
-  // Images par défaut si aucune image n'est disponible
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : ['/placeholder-product.jpg'];
+  const rawImages: string[] = Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : (product.image_url ? [product.image_url] : ['/placeholder-product.jpg']);
 
-  // Détails par défaut si aucun détail n'est disponible
+  const productImages = rawImages
+    .filter((u) => typeof u === 'string' && u.length > 0)
+    .map((u) => (u.startsWith('http://') || u.startsWith('https://') ? u : (u.startsWith('/') ? u : `/${u}`)));
+
   const productDetails = product.details && product.details.length > 0
     ? product.details
     : ['Produit de qualité', 'Livraison rapide', 'Garantie fabricant'];
 
-  // Préparer les informations de note (rating)
   const hasRating = typeof product.rating === 'number';
   const ratingValue = hasRating ? (product.rating as number) : 0;
 
@@ -70,7 +72,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="lg:grid lg:grid-cols-2 lg:gap-8">
-          {/* Galerie d'images */}
           <div className="space-y-4">
             <div className="aspect-w-4 aspect-h-3 rounded-lg overflow-hidden">
               <Image
@@ -84,7 +85,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </div>
             <div className="grid grid-cols-4 gap-2">
               {productImages.slice(0, 4).map((image, index) => (
-                <div key={index} className="aspect-square rounded-md overflow-hidden border border-gray-200">
+                <div key={`${image}-${index}`} className="aspect-square rounded-md overflow-hidden border border-gray-200">
                   <Image
                     src={image}
                     alt={`${product.name} - Vue ${index + 1}`}
@@ -97,13 +98,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
 
-          {/* Détails du produit */}
           <div className="mt-10 px-4 sm:mt-16 sm:px-0 lg:mt-0">
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
               {product.name}
             </h1>
 
-            {/* Catégorie */}
             {product.categories && (
               <div className="mt-2">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -124,7 +123,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </p>
             </div>
 
-            {/* Note si disponible */}
             {hasRating && (
               <div className="mt-3 flex items-center">
                 <div className="flex items-center">
@@ -172,7 +170,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   id={product.id}
                   name={product.name}
                   price={product.price}
-                  image_url={product.images && product.images.length > 0 ? product.images[0] : undefined}
+                  image_url={productImages[0]}
                   defaultQuantity={1}
                   goToCartOnAdd
                 />
@@ -187,7 +185,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Section avis */}
         <section aria-labelledby="reviews-heading" className="mt-16 sm:mt-24">
           <div className="border-t border-gray-200 pt-10">
             <h2 id="reviews-heading" className="text-lg font-medium text-gray-900">
