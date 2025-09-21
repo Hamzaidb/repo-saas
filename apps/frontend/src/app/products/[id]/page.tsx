@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import AddToCartButton from '@/components/AddToCartButton';
 
 // Type pour un produit (adapté à votre API)
 type Product = {
@@ -61,6 +62,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ? product.details
     : ['Produit de qualité', 'Livraison rapide', 'Garantie fabricant'];
 
+  // Préparer les informations de note (rating)
+  const hasRating = typeof product.rating === 'number';
+  const ratingValue = hasRating ? (product.rating as number) : 0;
+
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -120,14 +125,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Note si disponible */}
-            {product.rating && (
+            {hasRating && (
               <div className="mt-3 flex items-center">
                 <div className="flex items-center">
                   {[0, 1, 2, 3, 4].map((rating) => (
                     <svg
                       key={rating}
                       className={`${
-                        product.rating > rating ? 'text-yellow-400' : 'text-gray-200'
+                        ratingValue > rating ? 'text-yellow-400' : 'text-gray-200'
                       } h-5 w-5 flex-shrink-0`}
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -137,7 +142,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     </svg>
                   ))}
                 </div>
-                <p className="ml-2 text-sm text-gray-900">{product.rating.toFixed(1)}</p>
+                <p className="ml-2 text-sm text-gray-900">{ratingValue.toFixed(1)}</p>
               </div>
             )}
 
@@ -163,13 +168,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
             <div className="mt-8">
               <div className="mt-4 flex">
-                <button
-                  type="submit"
-                  className={`max-w-xs flex-1 bg-indigo-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-indigo-500 sm:w-full ${product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  disabled={product.stock === 0}
-                >
-                  {product.stock > 0 ? 'Ajouter au panier' : 'Rupture de stock'}
-                </button>
+                <AddToCartButton
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  image_url={product.images && product.images.length > 0 ? product.images[0] : undefined}
+                  defaultQuantity={1}
+                  goToCartOnAdd
+                />
               </div>
               <div className="mt-6 flex justify-center text-sm text-center text-gray-500">
                 <p>
