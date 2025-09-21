@@ -245,13 +245,13 @@ export default function Home() {
       {!loading && !error && (
         <>
           {/* Categories */}
-          <div className="py-12 bg-white">
+          <div className="py-12 bg-black">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                <h2 className="text-3xl font-normal text-white sm:text-4xl">
                   Nos univers
                 </h2>
-                <p className="mt-4 text-xl text-gray-500">
+                <p className="mt-4 text-xl text-gray-10">
                   Explorez nos différentes gammes de figurines
                 </p>
               </div>
@@ -261,7 +261,10 @@ export default function Home() {
                   <Link
                     key={category.id}
                     href={`/category/${category.id}`}
-                    className="group bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:border-indigo-200 hover:shadow-md transition-all duration-200 text-center"
+                    className="group bg-white p-6 
+                    rounded-lg shadow-sm border border-gray-100
+                     hover:border-indigo-200 hover:shadow-md 
+                     transition-all duration-200 text-center "
                   >
                     <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">
                       {category.icon}
@@ -280,7 +283,7 @@ export default function Home() {
           <div className="py-12 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center">
-                <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                <h2 className="text-3xl font-normal text-gray-900 sm:text-4xl">
                   Nos dernières arrivées
                 </h2>
                 <p className="mt-4 text-xl text-gray-500">
@@ -341,14 +344,19 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="mt-10 text-center">
-                <Link
-                  href="/products"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  Voir toutes les figurines
-                </Link>
-              </div>
+<div className="mt-10 text-center">
+  <Link
+    href="/products"
+    className="inline-flex items-center px-6 py-3 
+               rounded-md text-base font-medium 
+               text-white shadow-lg 
+               bg-indigo-600/30 backdrop-blur-md border border-white/20
+               hover:bg-indigo-600/50 transition"
+  >
+    Voir toutes les figurines
+  </Link>
+</div>
+
             </div>
           </div>
         </>
@@ -376,7 +384,7 @@ export default function Home() {
       </div>
 
       {/* CTA */}
-      <div className="bg-indigo-700">
+      <div className="bg-black">
         <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
             <span className="block">Prêt à commencer votre collection ?</span>
