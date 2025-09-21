@@ -1,6 +1,6 @@
-# repo-saas
+# Lootz - Boilerplate e-commerce
 
-Démo de monorepo d'un site e-commerce sur le thème des figurines construite avec Next.js (App Router) pour le frontend et Fastify + Prisma pour le backend. L’authentification est gérée côté frontend avec Supabase. Les flux de paiement (Checkout et Customer Portal) sont assurés via Stripe.
+Boilerplate de monorepo d'un site e-commerce sur le thème des figurines construite avec Next.js (App Router) pour le frontend et Fastify + Prisma pour le backend. L’authentification est gérée côté frontend avec Supabase. Les flux de paiement (Checkout et Customer Portal) sont assurés via Stripe.
 
 ## Sommaire
 - [Description du projet](#description-du-projet)
