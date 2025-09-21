@@ -31,7 +31,7 @@ Ce document décrit les choix techniques, l’architecture logicielle et les pri
 
 ## Flux d’authentification (Supabase)
 1. **Login email/password**: `supabase.auth.signInWithPassword()` depuis `apps/frontend/src/app/login/page.tsx`. La session est stockée par `supabase-js` (persistante). 
-2. **OAuth Google**: `signInWithOAuth({ provider: 'google', redirectTo: '/auth/callback' })`. À l’arrivée, `/auth/callback` vérifie la session et redirige vers `/dashboard`.
+2. **OAuth Google**: `signInWithOAuth({ provider: 'google', redirectTo: '/auth/callback' })`. À l’arrivée, `/auth/callback` vérifie la session et redirige vers `/dashboard` => pas encore au point
 3. **Mot de passe oublié**: `/forgot-password` appelle `supabase.auth.resetPasswordForEmail(email, { redirectTo: '/reset-password' })`. `/reset-password` permet de définir un nouveau mot de passe via `supabase.auth.updateUser({ password })`.
 4. **Protection routes**: `apps/frontend/src/app/dashboard/layout.tsx` redirige vers `/login` si pas authentifié.
 
@@ -41,25 +41,15 @@ Ce document décrit les choix techniques, l’architecture logicielle et les pri
 
 ## Flux de paiement (Stripe)
 - Frontend utilise `startCheckout()` (`apps/frontend/src/lib/stripe.ts`) → `POST {API}/billing/create-checkout-session`.
-- Backend compose des `line_items` depuis la base (ou `priceId` pour abonnement) et renvoie l’URL `session.url`.
+- Backend compose des `line_items` depuis la base et renvoie l’URL `session.url`.
 - Webhook `/webhooks/stripe` (body brut + vérification signature) permet de traiter `checkout.session.completed`, factures, abonnements. À compléter pour persister statut/commande.
 
 ## Sécurité
 - **CORS**: plugin `@fastify/cors` (`apps/backend/src/plugins/cors.ts`) avec liste d’origines autorisées.
 - **.env + validation**: `apps/backend/src/config/env.ts` (Zod) assure la présence de `DATABASE_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, etc.
-- **Validation des entrées**: Zod sur certaines routes (`products` params, `users` payload). À étendre.
+- **Validation des entrées**: Zod sur certaines routes (`products` params, `users` payload) => À étendre.
 - **Stripe webhook**: Raw body + signature.
-- **Notes**:
-  - Le routeur `users` crée actuellement un utilisateur avec un mot de passe en clair. Si ce backend gère réellement l’auth, il faut ajouter un hashage (bcrypt/argon2) et ne pas exposer Supabase et ce backend en double source de vérité. Aujourd’hui l’auth applicative passe par Supabase.
-  - Ajouter un rate limiting global et/ou par route sensible.
 
-## Plan de tests
-- **Backend (Jest)**:
-  - Unitaires: helpers de transformation (`transformProductData`), validation Zod (env, payloads), services Stripe (mock Stripe SDK).
-  - Intégration: routes `GET /products`, `GET /products/:id`, `POST /billing/create-checkout-session` (mocks Prisma/Stripe).
-- **Frontend**:
-  - Unitaires: hooks et context (`AuthContext`), lib `stripe.ts` (mocks fetch).
-  - E2E: parcours login → dashboard → checkout (Playwright/Cypress).
 
 ## Évolutions futures
 - RLS Supabase + tables alignées (si migration complète vers DB Supabase) ou unifier l’auth côté backend.
