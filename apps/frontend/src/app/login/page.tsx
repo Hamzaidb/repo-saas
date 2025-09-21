@@ -93,9 +93,9 @@ export default function LoginPage() {
         )}
 
         <div className="mt-8 space-y-6">
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="rounded-md space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
                 Adresse email
               </label>
               <input
@@ -109,7 +109,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
                 Mot de passe
               </label>
               <input
@@ -122,8 +122,13 @@ export default function LoginPage() {
                 disabled={loading}
               />
             </div>
+            
           </div>
-
+<div className="flex justify-center">
+              <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
+                Mot de passe oublié ?
+              </Link>
+            </div>
           <div className="space-y-4">
             <button
               onClick={handleSubmit}

@@ -189,15 +189,20 @@ export default function Home() {
       {/* Navbar globale via layout */}
 
       {/* Hero Section */}
-      <div className="relative bg-indigo-700">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-indigo-800 mix-blend-multiply"></div>
-        </div>
+      <div
+        className="relative"
+        style={{
+          backgroundImage: "url('/images/background.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60" />
         <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Découvrez notre collection exclusive de figurines
           </h1>
-          <p className="mt-6 text-xl text-indigo-100 max-w-3xl mx-auto">
+          <p className="mt-6 text-xl text-gray-100 max-w-3xl mx-auto">
             La plus belle sélection de figurines de collection, soigneusement sélectionnées pour les passionnés.
           </p>
           <div className="mt-10">

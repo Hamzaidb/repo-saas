@@ -2,7 +2,14 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService, type User, type UserRole } from '@/mocks/auth';
+import { createBrowserClient } from '@supabase/ssr';
+import type { User } from '@supabase/supabase-js';
+
+// Initialize Supabase client for the browser
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type AuthContextType = {
   user: User | null;
@@ -21,50 +28,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const initAuth = async () => {
+    let mounted = true;
+    const init = async () => {
       try {
-        const { user } = await authService.getSession();
-        setUser(user);
-      } catch (error) {
-        console.error('Erreur de vérification de session:', error);
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setUser(data.session?.user ?? null);
+      } catch (e) {
+        console.error('[Auth] Failed to initialize session', e);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
+    init();
 
-    initAuth();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const user = await authService.signIn(email, password);
-      setUser(user);
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Erreur de connexion:', error);
-      throw error;
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    setUser(data.user);
+    router.push('/dashboard');
   };
 
   const signUp = async (name: string, email: string, password: string) => {
-    try {
-      const user = await authService.signUp(name, email, password);
-      setUser(user);
-      router.push('/dashboard');
-    } catch (error) {
-      console.error("Erreur d'inscription:", error);
-      throw error;
-    }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error) throw error;
+    // Depending on your Supabase settings, user may need email confirmation
+    if (data.user) setUser(data.user);
+    router.push('/dashboard');
   };
 
   const signOut = async () => {
-    try {
-      await authService.signOut();
-      setUser(null);
-      router.push('/login');
-    } catch (error) {
-      console.error('Erreur de déconnexion:', error);
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setUser(null);
+    router.push('/login');
   };
 
   return (
@@ -86,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth doit être utilisé à l\'intérieur de AuthProvider');
+    throw new Error("useAuth doit être utilisé à l'intérieur de AuthProvider");
   }
   return context;
-};
+}

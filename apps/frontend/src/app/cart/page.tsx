@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { startCartCheckout, type CartCheckoutItem } from '@/lib/stripe';
 
 export type CartItem = {
   id: string;
@@ -65,6 +66,16 @@ export default function CartPage() {
     );
   const removeItem = (id: string) => setItems((prev) => prev.filter((it) => it.id !== id));
   const clear = () => setItems([]);
+
+  const handleCheckout = async () => {
+    try {
+      const payload: CartCheckoutItem[] = items.map((it) => ({ productId: it.id, quantity: it.quantity }));
+      await startCartCheckout(payload);
+    } catch (e) {
+      console.error('[CartPage] Checkout error', e);
+      alert('Impossible de démarrer le paiement. Vérifiez la console.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -151,7 +162,7 @@ export default function CartPage() {
               <p className="text-xs text-gray-500 mb-4">Taxes et frais de livraison calculés lors du paiement.</p>
               <button
                 className="w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                onClick={() => alert('Paiement non implémenté dans cette démo')}
+                onClick={handleCheckout}
               >
                 Passer au paiement
               </button>
