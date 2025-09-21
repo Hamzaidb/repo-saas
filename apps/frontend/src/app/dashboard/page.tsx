@@ -147,12 +147,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-semibold text-gray-900">
               Dashboard
             </h1>
-            <button
-              onClick={handleSignOut}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-            >
-              Se déconnecter
-            </button>
+            
           </div>
         </div>
       </header>
@@ -230,7 +225,7 @@ export default function DashboardPage() {
                       type="text"
                       value={profileName}
                       onChange={(e) => setProfileName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Votre nom"
                     />
                   </div>
@@ -250,12 +245,12 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Changer le mot de passe</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+                    <label className="block text-sm font-medium text-black mb-1">Nouveau mot de passe</label>
                     <input
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="••••••••"
                     />
                   </div>
@@ -265,7 +260,7 @@ export default function DashboardPage() {
                       type="password"
                       value={password2}
                       onChange={(e) => setPassword2(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="••••••••"
                     />
                   </div>

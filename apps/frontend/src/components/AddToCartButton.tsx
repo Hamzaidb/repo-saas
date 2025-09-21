@@ -79,7 +79,7 @@ export default function AddToCartButton({
       type="button"
       onClick={handleAdd}
       disabled={adding}
-      className={`max-w-xs flex-1 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white sm:w-full ${
+      className={`cursor-pointer max-w-xs flex-1 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white sm:w-full ${
         added ? "bg-green-600 hover:bg-green-700" : "bg-indigo-600 hover:bg-indigo-700"
       }`}
     >

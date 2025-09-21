@@ -177,9 +177,9 @@ export default function Home() {
       avatar: "👩"
     },
     {
-      quote: "Plateforme intuitive pour vendre mes créations. Très satisfait des ventes.",
-      author: "Marc D.",
-      role: "Vendeur",
+      quote: "Le plus beau site que j'ai vu de toute ma vie. Hamza et Didier méritent un 20/20 !",
+      author: "Morgan L.",
+      role: "Intervenant",
       avatar: "👨‍🎨"
     }
   ];
@@ -260,7 +260,7 @@ export default function Home() {
                 {categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/category/${category.id}`}
+                    href={`/products`}
                     className="group bg-white p-6 
                     rounded-lg shadow-sm border border-gray-100
                      hover:border-indigo-200 hover:shadow-md 
@@ -441,7 +441,7 @@ export default function Home() {
             </div>
           </nav>
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; {new Date().getFullYear()} FigurineStore. Tous droits réservés.
+            &copy; {new Date().getFullYear()} Lootz. By Hamza Idbouiguiguane & Didier Loti.
           </p>
         </div>
       </footer>

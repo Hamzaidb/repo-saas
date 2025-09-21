@@ -1,0 +1,14 @@
+# apps/frontend/.env.example (copy these into a local .env file)
+
+# Backend API URL that the frontend calls
+NEXT_PUBLIC_API_URL=http://localhost:3001
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Stripe publishable key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+
+# Optional app URL used in redirects
+NEXT_PUBLIC_APP_URL=http://localhost:3000

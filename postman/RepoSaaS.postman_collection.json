@@ -1,0 +1,154 @@
+{
+  "info": {
+    "name": "RepoSaaS Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "d9f9d3a4-1aaf-4b77-9f6e-86d1b8a2e001"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{API_BASE_URL}}/health",
+          "host": ["{{API_BASE_URL}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/products",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Get product by id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/products/:id",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["products", ":id"]
+            }
+          }
+        },
+        {
+          "name": "By category",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/products/category/:categoryId",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["products", "category", ":categoryId"]
+            }
+          }
+        },
+        {
+          "name": "Search",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/products/search/:term",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["products", "search", ":term"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/categories",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Category by id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/categories/:id",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["categories", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{API_BASE_URL}}/categories/stats",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["categories", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Create Checkout Session (payment from DB items)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"payment\",\n  \"items\": [ { \"productId\": \"abc123\", \"quantity\": 1 } ]\n}"
+            },
+            "url": {
+              "raw": "{{API_BASE_URL}}/billing/create-checkout-session",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["billing", "create-checkout-session"]
+            }
+          }
+        },
+        {
+          "name": "Create Checkout Session (subscription)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"subscription\",\n  \"priceId\": \"price_123\"\n}"
+            },
+            "url": {
+              "raw": "{{API_BASE_URL}}/billing/create-checkout-session",
+              "host": ["{{API_BASE_URL}}"],
+              "path": ["billing", "create-checkout-session"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "API_BASE_URL",
+      "value": "http://localhost:3001"
+    }
+  ]
+}

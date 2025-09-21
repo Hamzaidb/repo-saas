@@ -10,8 +10,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Votre Application",
-  description: "Description de votre application",
+  title: "Lootz - Boilerplate e-commerce",
+  description: "Projet par Hamza Idbouiguiguane et Didier Loti",
 };
 
 export default function RootLayout({
