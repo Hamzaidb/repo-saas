@@ -41,8 +41,8 @@ export default function RegisterPage() {
       return setError('Les mots de passe ne correspondent pas');
     }
 
-    if (formData.password.length < 6) {
-      return setError('Le mot de passe doit contenir au moins 6 caractères');
+    if (formData.password.length < 8) {
+      return setError('Le mot de passe doit contenir au moins 8 caractères');
     }
 
     if (formData.name.trim().length < 2) {
@@ -69,7 +69,7 @@ export default function RegisterPage() {
 
       if (authData.user) {
         // 2. Créer l'enregistrement dans votre table users via votre API
-        const response = await fetch('http://localhost:3001/users', {
+        const userResponse = await fetch('http://localhost:3001/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -82,28 +82,55 @@ export default function RegisterPage() {
           }),
         });
 
-        if (!response.ok) {
-          const errorData = await response.json();
+        if (!userResponse.ok) {
+          const errorData = await userResponse.json();
           throw new Error(errorData.error || 'Erreur lors de la création du profil utilisateur');
         }
 
-        setSuccess('Compte créé avec succès ! Vérifiez votre email pour confirmer votre inscription.');
+        const userData = await userResponse.json();
+
+        // 3. Envoyer l'email de vérification (automatique via Supabase)
+        // Supabase gère déjà cela automatiquement
+
+        // 4. Envoyer l'email de bienvenue personnalisé
+        try {
+          await fetch('http://localhost:3001/auth/send-welcome', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: authData.user.id
+            }),
+          });
+        } catch (emailError) {
+          // Ne pas faire échouer l'inscription si l'email de bienvenue échoue
+          console.warn('Email de bienvenue non envoyé:', emailError);
+        }
+
+        setSuccess(
+          'Compte créé avec succès ! ' +
+          'Vérifiez votre email pour confirmer votre inscription. ' +
+          'Un email de bienvenue vous a également été envoyé.'
+        );
         
-        // Optionnel : redirection après quelques secondes
+        // Redirection après quelques secondes
         setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+          router.push('/login?message=account-created');
+        }, 4000);
       }
     } catch (err: any) {
       console.error('Erreur d\'inscription:', err);
       
       // Messages d'erreur spécifiques
-      if (err.message?.includes('already registered')) {
+      if (err.message?.includes('already registered') || err.message?.includes('already been registered')) {
         setError('Cette adresse email est déjà utilisée');
       } else if (err.message?.includes('Invalid email')) {
         setError('Adresse email invalide');
-      } else if (err.message?.includes('Password')) {
-        setError('Le mot de passe ne respecte pas les critères requis');
+      } else if (err.message?.includes('Password') || err.message?.includes('password')) {
+        setError('Le mot de passe ne respecte pas les critères requis (8 caractères minimum)');
+      } else if (err.message?.includes('signup')) {
+        setError('Erreur lors de la création du compte. Veuillez réessayer.');
       } else {
         setError(err.message || 'Une erreur est survenue lors de l\'inscription');
       }
@@ -167,12 +194,15 @@ export default function RegisterPage() {
           <div className="bg-green-50 border border-green-200 rounded-md p-4">
             <div className="flex">
               <span className="text-green-400 mr-2">✅</span>
-              <span className="text-green-800 text-sm">{success}</span>
+              <div className="text-green-800 text-sm">
+                <p>{success}</p>
+                <p className="mt-2 text-xs">Redirection automatique dans quelques secondes...</p>
+              </div>
             </div>
           </div>
         )}
 
-        <div className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -219,15 +249,18 @@ export default function RegisterPage() {
                 type="password"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
-                placeholder="Minimum 6 caractères"
+                placeholder="Minimum 8 caractères"
                 value={formData.password}
                 onChange={handleChange}
                 disabled={loading}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                Le mot de passe doit contenir au moins 8 caractères
+              </p>
             </div>
             
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1 text-black">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirmer le mot de passe
               </label>
               <input
@@ -267,13 +300,16 @@ export default function RegisterPage() {
 
           <div className="space-y-4">
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <span className="animate-spin mr-2">⏳</span>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
                   Création du compte...
                 </span>
               ) : (
@@ -291,15 +327,16 @@ export default function RegisterPage() {
             </div>
 
             <button
+              type="button"
               onClick={handleGoogleSignUp}
               disabled={loading}
-              className="w-full py-3 px-4 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <span className="mr-2">🔍</span>
               S'inscrire avec Google
             </button>
           </div>
-        </div>
+        </form>
 
         <div className="text-center">
           <Link 
