@@ -1,8 +1,8 @@
-# repo-saas
+# Lootz - Boilerplate e-commerce
 
-Monorepo SaaS demo built with Next.js (App Router) for the frontend and Fastify + Prisma for the backend, orchestrated by Turborepo. Auth is handled on the frontend with Supabase. Billing flows (Checkout + Portal) are provided via Stripe.
+Boilerplate de monorepo d'un site e-commerce sur le thème des figurines construite avec Next.js (App Router) pour le frontend et Fastify + Prisma pour le backend. L’authentification est gérée côté frontend avec Supabase. Les flux de paiement (Checkout et Customer Portal) sont assurés via Stripe.
 
-## Table of Contents
+## Sommaire
 - [Description du projet](#description-du-projet)
 - [Prérequis système](#prérequis-système)
 - [Installation](#installation)
@@ -96,6 +96,5 @@ Frontend (`apps/frontend/`):
 - Suggestion: Jest + ts-jest pour le backend (unit/integration), Playwright/Cypress pour e2e côté frontend.
 
 ## Dépannage
-- Erreur JSON / 404 sur forgot-password: vérifier que `/apps/frontend/src/app/forgot-password/page.tsx` utilise `supabase.auth.resetPasswordForEmail` et que `/apps/frontend/src/app/reset-password/page.tsx` existe.
 - Images produits externes: ajouter le domaine à `apps/frontend/next.config.ts` → `images.remotePatterns`.
 - Webhook Stripe: `STRIPE_WEBHOOK_SECRET` requis. S’assurer que `app.ts` préserve le raw body pour `/webhooks/stripe` (déjà fait).
