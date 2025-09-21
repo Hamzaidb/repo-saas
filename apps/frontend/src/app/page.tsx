@@ -441,7 +441,7 @@ export default function Home() {
             </div>
           </nav>
           <p className="mt-8 text-center text-base text-gray-400">
-            &copy; {new Date().getFullYear()} FigurineStore. Tous droits réservés.
+            &copy; {new Date().getFullYear()} Lootz. By Hamza Idbouiguiguane & Didier Loti.
           </p>
         </div>
       </footer>

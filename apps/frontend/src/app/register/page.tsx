@@ -112,6 +112,7 @@ export default function RegisterPage() {
     }
   };
 
+  // Connexion avec google (non utilisé en ce moment)
   const handleGoogleSignUp = async () => {
     setError('');
     setLoading(true);
@@ -136,12 +137,10 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-            <span className="text-2xl">🏪</span>
-          </div>
+          
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Créer un compte
           </h2>
@@ -173,7 +172,7 @@ export default function RegisterPage() {
         )}
 
         <div className="mt-8 space-y-6">
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                 Nom complet
@@ -244,26 +243,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="flex items-center">
-            <input
-              id="terms"
-              name="terms"
-              type="checkbox"
-              required
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              disabled={loading}
-            />
-            <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-              J'accepte les{' '}
-              <Link href="/terms" className="text-indigo-600 hover:text-indigo-500">
-                conditions d'utilisation
-              </Link>{' '}
-              et la{' '}
-              <Link href="/privacy" className="text-indigo-600 hover:text-indigo-500">
-                politique de confidentialité
-              </Link>
-            </label>
-          </div>
+          
 
           <div className="space-y-4">
             <button
@@ -280,7 +260,7 @@ export default function RegisterPage() {
                 'Créer un compte'
               )}
             </button>
-
+{/*
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -290,6 +270,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
+              
             <button
               onClick={handleGoogleSignUp}
               disabled={loading}
@@ -297,7 +278,7 @@ export default function RegisterPage() {
             >
               <span className="mr-2">🔍</span>
               S'inscrire avec Google
-            </button>
+            </button>*/}
           </div>
         </div>
 

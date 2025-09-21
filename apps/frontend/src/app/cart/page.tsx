@@ -84,7 +84,7 @@ export default function CartPage() {
           <h1 className="text-3xl font-bold text-gray-900">Votre panier</h1>
           <Link
             href="/products"
-            className="text-indigo-600 hover:text-indigo-700"
+            className="text-indigo-600 hover:text-indigo-700 "
           >
             Continuer vos achats →
           </Link>
@@ -97,7 +97,7 @@ export default function CartPage() {
             <p className="text-gray-500 mb-6">Ajoutez des produits à votre panier pour les voir ici.</p>
             <Link
               href="/products"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+              className="cursor-pointer inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
             >
               Voir les produits
             </Link>
@@ -138,7 +138,7 @@ export default function CartPage() {
                       </div>
                       <button
                         onClick={() => removeItem(it.id)}
-                        className="text-sm text-red-600 hover:text-red-700"
+                        className="cursor-pointer text-sm text-red-600 hover:text-red-700"
                       >
                         Supprimer
                       </button>
@@ -161,13 +161,13 @@ export default function CartPage() {
               </div>
               <p className="text-xs text-gray-500 mb-4">Taxes et frais de livraison calculés lors du paiement.</p>
               <button
-                className="w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                className="cursor-pointer w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 onClick={handleCheckout}
               >
                 Passer au paiement
               </button>
               <button
-                className="mt-3 w-full inline-flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="cursor-pointer mt-3 w-full inline-flex items-center justify-center px-5 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 onClick={clear}
               >
                 Vider le panier

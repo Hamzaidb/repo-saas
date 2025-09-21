@@ -165,7 +165,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
             </div>
 
             <div className="mt-8">
-              <div className="mt-4 flex">
+              <div className="mt-4 flex cursor-pointer">
                 <AddToCartButton
                   id={product.id}
                   name={product.name}
@@ -175,7 +175,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
                   goToCartOnAdd
                 />
               </div>
-              <div className="mt-6 flex justify-center text-sm text-center text-gray-500">
+              <div className="mt-6 flex justify-items-start text-sm text-center text-gray-500">
                 <p>
                   Livraison sous 2-3 jours ouvrés<br />
                   <span className="text-indigo-600 font-medium">Retours gratuits sous 30 jours</span>
