@@ -177,9 +177,9 @@ export default function Home() {
       avatar: "👩"
     },
     {
-      quote: "Plateforme intuitive pour vendre mes créations. Très satisfait des ventes.",
-      author: "Marc D.",
-      role: "Vendeur",
+      quote: "Le plus beau site que j'ai vu de toute ma vie. Hamza et Didier méritent un 20/20 !",
+      author: "Morgan L.",
+      role: "Intervenant",
       avatar: "👨‍🎨"
     }
   ];
